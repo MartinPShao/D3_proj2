@@ -1,0 +1,48 @@
+---
+title: "Data Cookbook for Proj2"
+author: "P. Shao"
+date: "December 1, 2015"
+output: html_document
+---
+
+# Read Raw Data
+
+```{r}
+setwd("~/Documents/git/D3_proj2")
+rm(list = ls())
+library(readr)
+Iowa_CRD_Centroid_Long_Lat <- file(description = "./Iowa_CRD_Centroid_Long_Lat")
+open(Iowa_CRD_Centroid_Long_Lat)
+temp <- readLines(Iowa_CRD_Centroid_Long_Lat)
+close(Iowa_CRD_Centroid_Long_Lat)
+rm(Iowa_CRD_Centroid_Long_Lat)
+temp <- strsplit(temp, "[\t]+")
+Iowa_CRD_Centroid_Long_Lat <- data.frame(
+        sapply(temp[-1], "[", 1), 
+        as.numeric(sapply(temp[-1], "[", 2)), 
+        as.numeric(sapply(temp[-1], "[", 3)))
+names(Iowa_CRD_Centroid_Long_Lat) <- substr(temp[[1]], 
+                                            2, 
+                                            nchar(temp[[1]])-1)
+rm(temp)
+
+IowaCornYieldAnom19502009train <- 
+        read.table("./IowaCornYieldAnom19502009train.dat")
+lonlatSST <- read.table(
+        "./lonlatSST.dat", 
+        col.names = c("lon", "lat")
+)
+
+lonlatTempPrecip <- read.table("./lonlatTempPrecip.dat")
+Precip_train_011950_062009 <- read.table(
+        "./Precip_train_011950_062009.dat")
+Temp_train_011950_062009 <- read.table(
+        "./Temp_train_011950_062009.dat"
+)
+Temp_train_011950_062009 <- read_table(
+        "./Temp_train_011950_062009.dat", 
+        col_names = FALSE
+)
+save(list = ls(), file = "./rawData.RData")
+
+```
