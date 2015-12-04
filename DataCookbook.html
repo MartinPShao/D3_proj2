@@ -72,6 +72,7 @@ img {
 <pre class="r"><code>setwd(&quot;~/Documents/git/D3_proj2&quot;)
 rm(list = ls())
 library(readr)
+library(plyr)
 Iowa_CRD_Centroid_Long_Lat &lt;- file(description = &quot;./Iowa_CRD_Centroid_Long_Lat&quot;)
 open(Iowa_CRD_Centroid_Long_Lat)
 temp &lt;- readLines(Iowa_CRD_Centroid_Long_Lat)
@@ -86,24 +87,39 @@ names(Iowa_CRD_Centroid_Long_Lat) &lt;- substr(temp[[1]],
                                             2, 
                                             nchar(temp[[1]])-1)
 rm(temp)
-
+month_index &lt;- expand.grid(month.abb, 1950:2008)
+month_index &lt;- mdply(month_index, 'paste', sep = &quot;&quot;)
+month_index &lt;- data.frame(ind = 1:(nrow(month_index) + 6),
+                          month = c(month_index[, 3], 
+                                    paste(month.abb[1:6], 
+                                          &quot;2009&quot;, 
+                                          sep = &quot;&quot;)), 
+                          stringsAsFactors = FALSE
+)
 IowaCornYieldAnom19502009train &lt;- 
-        read.table(&quot;./IowaCornYieldAnom19502009train.dat&quot;)
+        read.table(&quot;./IowaCornYieldAnom19502009train.dat&quot;, 
+                   col.names = c(&quot;Year&quot;,as.character(Iowa_CRD_Centroid_Long_Lat$Location)[order(Iowa_CRD_Centroid_Long_Lat$Location)]))
+
+
 lonlatSST &lt;- read.table(
         &quot;./lonlatSST.dat&quot;, 
         col.names = c(&quot;lon&quot;, &quot;lat&quot;)
 )
 
-lonlatTempPrecip &lt;- read.table(&quot;./lonlatTempPrecip.dat&quot;)
+lonlatTempPrecip &lt;- read.table(&quot;./lonlatTempPrecip.dat&quot;, 
+                               col.names = c(&quot;Temp&quot;, &quot;Precip&quot;))
 Precip_train_011950_062009 &lt;- read.table(
-        &quot;./Precip_train_011950_062009.dat&quot;)
+        &quot;./Precip_train_011950_062009.dat&quot;, 
+        col.names = month_index$month)
 Temp_train_011950_062009 &lt;- read.table(
-        &quot;./Temp_train_011950_062009.dat&quot;
-)
-Temp_train_011950_062009 &lt;- read_table(
         &quot;./Temp_train_011950_062009.dat&quot;, 
-        col_names = FALSE
+        col.names = month_index$month
 )
+SST_train_011950_062009 &lt;- read_table(
+        &quot;./SST_train_011950_062009.dat&quot;, 
+        col_names = month_index$month
+)
+
 save(list = ls(), file = &quot;./rawData.RData&quot;)</code></pre>
 </div>
 
