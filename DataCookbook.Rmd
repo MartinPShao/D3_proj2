@@ -46,7 +46,7 @@ lonlatSST <- read.table(
 )
 
 lonlatTempPrecip <- read.table("./lonlatTempPrecip.dat", 
-                               col.names = c("Temp", "Precip"))
+                               col.names = c("lon", "lat"))
 Precip_train_011950_062009 <- read.table(
         "./Precip_train_011950_062009.dat", 
         col.names = month_index$month)
@@ -60,6 +60,69 @@ SST_train_011950_062009 <- read_table(
 )
 
 save(list = ls(), file = "./rawData.RData")
-
-
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
