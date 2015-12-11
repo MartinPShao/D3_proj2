@@ -122,6 +122,14 @@ SST_train_011950_062009 &lt;- read_table(
 
 save(list = ls(), file = &quot;./rawData.RData&quot;)</code></pre>
 </div>
+<div id="dimension-reduction" class="section level1">
+<h1>Dimension Reduction</h1>
+<div id="pc-decomposition" class="section level2">
+<h2>PC Decomposition</h2>
+<pre class="r"><code>pc_temp &lt;- prcomp(t(Temp_train_011950_062009))
+pc_precip &lt;- prcomp(t(Precip_train_011950_062009))</code></pre>
+</div>
+</div>
 
 
 </div>

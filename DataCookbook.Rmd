@@ -63,7 +63,13 @@ save(list = ls(), file = "./rawData.RData")
 ```
 
 
+# Dimension Reduction
+## PC Decomposition
 
+```{r}
+pc_temp <- prcomp(t(Temp_train_011950_062009))
+pc_precip <- prcomp(t(Precip_train_011950_062009))
+```
 
 
 
