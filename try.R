@@ -1,0 +1,77 @@
+setwd("~/Documents/git/D3_proj2")
+load("./rawData.RData")
+baseline_2 <- IowaCornYieldAnom19502009train[1:59, -1]
+diff_2 <- IowaCornYieldAnom19502009train[2:60, -1] - baseline_2
+mean(apply(diff_2^2, 1, mean))
+basline_1 <- apply(IowaCornYieldAnom19502009train, 2, mean)
+for (i in 1:60){
+        diff_1 <- IowaCornYieldAnom19502009train[i, ] - basline_1
+}
+mean(apply(diff_1^2, 1, mean))
+smooth_corn <- matrix(NA, nrow = 58, ncol = 9)
+for (i in 1:58){
+        smooth_corn[i, ] <- apply(IowaCornYieldAnom19502009train[i:(i+2), 
+                                                                 -1], 
+                                  2, 
+                                  mean)
+}
+
+
+par(mfrow=c(2,1),mar=c(3,3,1,1))
+rm(ttt)
+ttt <- numeric(59)
+for (i in 0:58){
+        ttt[i+1] <- mean(as.numeric(Precip_train_011950_062009[34, (12*i+1):(12*(i+1))]))
+}
+plot(1950:2008, ttt, type = "l")
+abline(v = c(1983, 1988, 1993, 1994, 1998))
+
+rm(ttt)
+ttt <- numeric(59)
+for (i in 0:58){
+        ttt[i+1] <- mean(as.numeric(Temp_train_011950_062009[34,  (12*i+1):(12*(i+1))]))
+}
+plot(1950:2008, ttt, type = "l")
+abline(v = c(1983, 1988, 1993, 1994, 1998))
+
+
+nino <- read.table(file = "3mth.nino34.81-10.ascii.txt", header = FALSE, 
+                   col.names = c("mons", "year", "sst"))
+library(dplyr)
+nino <- nino %>%
+        group_by(year) %>%
+        summarise(sst = mean(sst))
+nino <- as.data.frame(nino)
+
+
+tp <- rbind(as.matrix(Iowa_CRD_Centroid_Long_Lat[,2:3]), as.matrix(lonlatTempPrecip))
+tp <- as.matrix(dist(tp, diag = TRUE, upper = TRUE))
+distance <- tp[1:9, -(1:9)]
+for (i in 1:9){
+        distance[i, distance[i, ]<quantile(distance[i, ], probs = 0.21)] <- 1
+        distance[i, !(distance[i, ]<quantile(distance[i, ], probs = 0.21))] <- 0
+}
+dimnames(distance) <- NULL
+
+area_ave_temp <- matrix(NA, nrow = 9, ncol = 786)
+for (i in 1:9){
+        area_ave_temp[i, ] <- apply(Temp[as.logical(distance[i, ]), ], 2, mean)
+}
+
+area_ave_prec <- matrix(NA, nrow = 9, ncol = 786)
+for (i in 1:9){
+        area_ave_prec[i, ] <- apply(Prec[as.logical(distance[i, ]), ], 2, mean)
+}
+save(area_ave_temp, area_ave_prec, file = "area_monthly_data.RData")
+
+
+
+Long_yield <- reshape(Yield, idvar = "Year", direction = "long", times = names(Yield)[-1], timevar = "area", 
+                      varying = list(names(Yield)[-1]))
+
+rownames(Long_yield) <- NULL
+colnames(Long_yield) <- c("year", "district", "yield")
+interval <- (max(Long_yield$yield)-min(Long_yield$yield))/3
+cut1 <- min(Long_yield$yield) + interval
+cut2 <- max(Long_yield$yield) - interval
+
