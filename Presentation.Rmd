@@ -1,35 +1,211 @@
 ---
-title: "Presentation"
-author: "xxxxx"
-date: "December 12, 2015"
-output: ioslides_presentation
+title: "Iowa Corn Yield Prediction"
+author: "Group: spv5"
+date: "December 14, 2015"
+output: 
+        beamer_presentation:
+                theme: "Hannover"
+                colortheme: "crane"
+                fonttheme: "structurebold"
+                slide_level: 3
 ---
+```{r, echo=FALSE, include=FALSE}
+library(ggplot2)
+load("./MSELIST.RData")
+load("./rawData.RData")
+load("./oob.RData")
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+        library(grid)
+        
+        # Make a list from the ... arguments and plotlist
+        plots <- c(list(...), plotlist)
+        
+        numPlots = length(plots)
+        
+        # If layout is NULL, then use 'cols' to determine layout
+        if (is.null(layout)) {
+                # Make the panel
+                # ncol: Number of columns of plots
+                # nrow: Number of rows needed, calculated from # of cols
+                layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                                 ncol = cols, nrow = ceiling(numPlots/cols))
+        }
+        
+        if (numPlots==1) {
+                print(plots[[1]])
+                
+        } else {
+                # Set up the page
+                grid.newpage()
+                pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+                
+                # Make each plot, in the correct location
+                for (i in 1:numPlots) {
+                        # Get the i,j matrix positions of the regions that contain this subplot
+                        matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+                        
+                        print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                                        layout.pos.col = matchidx$col))
+                }
+        }
+}
 
-## Title of each 
-
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
-
-## Slide with Bullets
-
-### sss
-
-### sss
-
-* Bullet 1
-- Bullet 2
-- Bullet 3
-
-## Slide with R Code and Output
-
-```{r}
-summary(cars)
 ```
+# Data Preprocessing
 
-## Slide with Plot
+### Model Data
 
+#### Candidate Predictors 
+* 9 District as categorical variables;
+* Year as continuous;
+* 10 year historical yield data;
+* 1 year precipitation and temperature of first three PCs;
+* 1 year SST of first three PCs.
+
+#### Response
+
+* Yield of this year.
+
+### Model Data
+
+#### Regression or Classification
+
+* Quantitative prediction model could provide more helpful information with the cost-profit decisions;
+
+* The choice of the cut-off of classification is a controvercial issue.
+
+
+
+
+
+
+
+### Dimension Reduction
+
+#### PCA 
 ```{r, echo=FALSE}
-plot(cars)
+pca.prec <- prcomp(t(Precip_train_011950_062009))
+p1 <- ggplot() + geom_line(mapping = aes(x = 1:8, y = pca.prec$sdev[1:8])) + ggtitle("Variance Component of PCs for Precip") + 
+        xlab("PC") + ylab("Variance")
+# p2 <- ggplot() + geom_point(mapping = aes(x = lonlatTempPrecip$lon,
+#                                          y = lonlatTempPrecip$lat, 
+#                                          col = pca.prec$rotation[, 1])) +
+#         scale_colour_gradient(low = "blue", high = "yellow") + 
+#         ggtitle("1st PC Loading Map for Precip") +
+#         xlab("Lon") + ylab("Lat")
+pca.temp <- prcomp(t(Temp_train_011950_062009))
+p2 <- ggplot() + geom_line(mapping = aes(x = 1:8, y = pca.temp$sdev[1:8])) + ggtitle("Variance Component of PCs for Temp") + 
+        xlab("PC") + ylab("Variance")
+multiplot(p1, p2)
 ```
+
+### Dimension Reduction
+
+
+
+#### PCA 
+```{r, echo=FALSE}
+
+p3 <- ggplot() + geom_point(mapping = aes(x = lonlatTempPrecip$lon,
+                                         y = lonlatTempPrecip$lat, 
+                                         col = pca.prec$rotation[, 1])) +
+        scale_colour_gradient(low = "blue", high = "yellow") + 
+        ggtitle("1st PC Loading Map for Precip") +
+        xlab("Lon") + ylab("Lat")
+p4 <- ggplot() + geom_point(mapping = aes(x = lonlatTempPrecip$lon,
+                                         y = lonlatTempPrecip$lat, 
+                                         col = pca.prec$rotation[, 2])) +
+        scale_colour_gradient(low = "blue", high = "yellow") + 
+        ggtitle("2nd PC Loading Map for Precip") +
+        xlab("Lon") + ylab("Lat")
+p5 <- ggplot() + geom_point(mapping = aes(x = lonlatTempPrecip$lon,
+                                         y = lonlatTempPrecip$lat, 
+                                         col = pca.temp$rotation[, 1])) +
+        scale_colour_gradient(low = "blue", high = "yellow") + 
+        ggtitle("1st PC Loading Map for Temp") +
+        xlab("Lon") + ylab("Lat")
+p6 <- ggplot() + geom_point(mapping = aes(x = lonlatTempPrecip$lon,
+                                         y = lonlatTempPrecip$lat, 
+                                         col = pca.temp$rotation[, 2])) +
+        scale_colour_gradient(low = "blue", high = "yellow") + 
+        ggtitle("2nd PC Loading Map for Temp") +
+        xlab("Lon") + ylab("Lat")
+
+multiplot(p3, p5, p4, p6, cols = 2)
+```
+
+
+
+# Model Selection
+
+### Feature Selection
+
+We group the features, then try different combinations of the groups to fit models using lasso and ridge regression. From the outputs of this two methods, we compare the MSEs and have following findings:
+
+#####
+* SSTs do not help to reduce MSE;
+* Temperature itself is not useful, but the interaction of temperature and precipitation is useful;
+* When sample size is not large enough, too much noise will harm the predictive power.
+
+### Model Selection
+
+#### Candidate Model
+* RandomForest
+* Deeplearning
+* Boosting
+* Lasso/Ridge
+
+#### Training Sample Size
+* Cumulative sample size (all historical data)
+* 10 year running sample size (sample size is always 10)
+
+### Model Selection
+````{r, echo=FALSE}
+p7 <- ggplot() + geom_line(mapping = aes(x=1:46, y=MSE.list)) +
+        xlab("year")+ylab("OOB MSE") + ggtitle("OOB MSE with 10 Year Running Sample Size")
+p8 <- ggplot() + geom_line(mapping = aes(x=1:46, y=MSE.list2)) +
+        xlab("year")+ylab("OOB MSE") + ggtitle("OOB MSE with Cumulative sample size")
+multiplot(p8, p7, cols = 2)
+```
+
+
+# Model Evaluation
+
+### MSE by h2o package
+
+#### Baseline
+* Average Estimate: MSE=364.0061
+* Last Year Estimate: MSE=701.7978
+
+#### Model
+* RandomForest: MSE=393.2477(June), MSE=393.7953(March)
+* Ridge: MSE=434.0248(June), MSE=413.9061(March)
+
+### Model
+```{r, echo=FALSE}
+plot(1950:2009, apply(IowaCornYieldAnom19502009train[, -1], 1, mean), type = "l", ylab = "Mean Yield", xlab = "Year")
+```
+
+
+
+
+# Conclusion
+
+### Conclusion
+
+1. For small sample of observations, the noise may overwhelm the effect of useful variable, even for random forest, the variable selection procedure cannot extract the key information of data;
+2. The result indicates that the interaction between the temperature and precipitation does have some effects on the corn yield. The extreme values of yield which have very poor prediction usually occur when the temperature and precipatation also become the local extreme value. But the relationship may not be predominant, so it cannot lead a low error rate;
+3. To improve the predictive power of this model, we need more  information which is beyond the scope of data we obtained.
+
+
 
