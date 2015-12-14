@@ -64,14 +64,46 @@ for (i in 1:9){
 }
 save(area_ave_temp, area_ave_prec, file = "area_monthly_data.RData")
 
+pna <- read.table(file = "./pna.txt", header = TRUE)
+pna <- pna %>%
+        group_by(YEAR) %>%
+        summarise(pna = mean(INDEX))
+pna <- as.data.frame(pna)
+
+solar <- read.table(file = "solar.data.txt", header = FALSE)
+solar <- reshape(solar, direction = "long", varying = list(names(solar)[-1]), 
+                 idvar = "V1")
+solar <- solar %>%
+        group_by(V1) %>%
+        summarize(solar_flux = mean(V2))
 
 
-Long_yield <- reshape(Yield, idvar = "Year", direction = "long", times = names(Yield)[-1], timevar = "area", 
+Long_yield <- reshape(Yield, idvar = "Year", direction = "long", times = 1:9, timevar = "area", 
                       varying = list(names(Yield)[-1]))
+
+
+
+
 
 rownames(Long_yield) <- NULL
 colnames(Long_yield) <- c("year", "district", "yield")
-interval <- (max(Long_yield$yield)-min(Long_yield$yield))/3
-cut1 <- min(Long_yield$yield) + interval
-cut2 <- max(Long_yield$yield) - interval
+cut1 <- quantile(Long_yield$yield, probs = 1/3)
+cut2 <- quantile(Long_yield$yield, probs = 2/3)
+Long_yield$yield[Long_yield$yield<=cut2 & Long_yield$yield>=cut1] <- 0
+Long_yield$yield[Long_yield$yield<cut1] <- -1
+Long_yield$yield[Long_yield$yield>cut2] <- 1
 
+Long_yield$yield <- as.factor(Long_yield$yield)
+
+
+
+
+library(caret)
+cbaseline1 <- Long_yield$yield
+for (i in 0:8){
+        cbaseline1[(66*i+2):(66*i+66)] <- cbaseline1[(66*i+1):(66*i+65)]
+}
+confusionMatrix(cbaseline1, Long_yield$yield)
+cbaseline2 <- factor(rep(0, 594), levels = levels(Long_yield$yield))
+confusionMatrix(cbaseline2, Long_yield$yield)
+save(Long_yield, file = "./Class_Resp.RData")
